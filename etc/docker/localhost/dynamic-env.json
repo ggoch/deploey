@@ -1,0 +1,25 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"http://localhost:4200",
+    "name": "ChengyiV2",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://localhost:44334/",
+    "redirectUri": "http://localhost:4200",
+    "clientId": "ChengyiV2_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone ChengyiV2"
+  },
+  "apis": {
+    "default": {
+      "url": "https://localhost:44354",
+      "rootNamespace": "ChengyiV2"
+    },
+    "AbpAccountPublic": {
+      "url": "https://localhost:44334",
+      "rootNamespace": "AbpAccountPublic"
+    }
+  }
+}

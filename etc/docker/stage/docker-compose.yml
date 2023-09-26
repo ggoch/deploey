@@ -1,0 +1,158 @@
+version: '3.7'
+
+services:
+  chengyiv2-angular:
+    image: mycompanyname/chengyiv2-angular:latest
+    container_name: chengyiv2-angular
+    # build:
+    #   context: ../../../
+    #   dockerfile: angular/Dockerfile.local
+    ports:
+      - "4200:80"
+    depends_on:
+      - chengyiv2-api
+    volumes:
+      - angular://usr/share/nginx/html
+    networks:
+      - abp-network
+
+  chengyiv2-api:
+    image: mycompanyname/chengyiv2-api:latest
+    container_name: chengyiv2-api
+    hostname: chengyiv2-api
+    # build:
+    #   context: ../../
+    #   dockerfile: src/ChengyiV2.HttpApi.Host/Dockerfile.local
+    environment:
+      - ASPNETCORE_URLS=https://+:443;http://+:80;
+      - Kestrel__Certificates__Default__Path=/root/certificate/localhost.pfx
+      - Kestrel__Certificates__Default__Password=aec3193e-fb11-4bb0-bc62-96894faf91eb
+      - App__SelfUrl=https://api.chengyi.stage.furthersoftware.com.tw
+      - App__AngularUrl=https://admin.chengyi.stage.furthersoftware.com.tw
+      - App_CorsOrigins=https://admin.chengyi.stage.furthersoftware.com.tw
+      - App__HealthCheckUrl=http://chengyiv2-api/health-status
+      - AuthServer__RequireHttpsMetadata=false
+      - AuthServer__Authority=http://chengyiv2-authserver
+      - AuthServer__AuthorityUrl=https://auth.chengyi.stage.furthersoftware.com.tw
+      - ConnectionStrings__Default=Data Source=sql-server;Initial Catalog=ChengyiV2;User Id=sa;Password=myPassw0rd;MultipleActiveResultSets=true;TrustServerCertificate=True;
+      - Redis__Configuration=redis
+    ports:
+      - "44354:443"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy  
+    restart: on-failure    
+    volumes:
+      - api:/root/certificate
+    networks:
+      - abp-network
+  
+  chengyiv2-authserver:
+    image: mycompanyname/chengyiv2-authserver:latest
+    container_name: chengyiv2-authserver
+    # build:
+    #   context: ../../
+    #   dockerfile: src/ChengyiV2.AuthServer/Dockerfile.local
+    environment:
+      - ASPNETCORE_URLS=https://+:443;http://+:80;
+      - App__SelfUrl=https://auth.chengyi.stage.furthersoftware.com.tw
+      - App__CorsOrigins=https://admin.chengyi.stage.furthersoftware.com.tw,https://api.chengyi.stage.furthersoftware.com.tw
+      - AuthServer__RequireHttpsMetadata=false
+      - AuthServer__Authority=https://auth.chengyi.stage.furthersoftware.com.tw/
+      - Kestrel__Certificates__Default__Path=/root/certificate/localhost.pfx
+      - Kestrel__Certificates__Default__Password=aec3193e-fb11-4bb0-bc62-96894faf91eb
+      - ConnectionStrings__Default=Data Source=sql-server;Initial Catalog=ChengyiV2;User Id=sa;Password=myPassw0rd;MultipleActiveResultSets=true;TrustServerCertificate=True;
+      - Redis__Configuration=redis
+    ports:
+      - "44334:443"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - authserver:/root/certificate
+    networks:
+      - abp-network
+
+  db-migrator:
+    image: mycompanyname/chengyiv2-db-migrator:latest
+    container_name: db-migrator
+    # build:
+    #   context: ../../
+    #   dockerfile: src/ChengyiV2.DbMigrator/Dockerfile.local
+    environment:
+      - OpenIddict__Applications__ChengyiV2_App__RootUrl=https://admin.chengyi.stage.furthersoftware.com.tw
+      - OpenIddict__Applications__ChengyiV2_Swagger__RootUrl=https://api.chengyi.stage.furthersoftware.com.tw
+      - ConnectionStrings__Default=Data Source=sql-server;Initial Catalog=ChengyiV2;User Id=sa;Password=myPassw0rd;MultipleActiveResultSets=true;TrustServerCertificate=True;
+      - Redis__Configuration=redis
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    networks:
+      - abp-network    
+  
+  sql-server:
+    container_name: sql-server
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - "1434:1433"
+    environment:
+      SA_PASSWORD: "myPassw0rd"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - abp-network  
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S sql-server -U sa -P "myPassw0rd" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+  
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - abp-network  
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]    
+
+
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - nginx-proxy-manager-data:/data
+      - nginx-proxy-manager-letsencrypt:/etc/letsencrypt
+    networks:
+      - abp-network  
+
+volumes:
+  sqldata:
+    name: chengyiv2_sqldata
+  angular:
+    name: chengyiv2_angular
+  api:
+    name: chengyiv2_api
+  authserver:
+    name: chengyiv2_authserver
+  nginx-proxy-manager-data:
+    name: chengyiv2_nginx-proxy-manager-data
+  nginx-proxy-manager-letsencrypt:
+    name: chengyiv2_nginx-proxy-manager-letsencrypt
+networks:
+  abp-network:
+    name: chengyiv2-network
+    driver: bridge

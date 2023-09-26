@@ -1,0 +1,25 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"https://admin.chengyi.stage.furthersoftware.com.tw",
+    "name": "ChengyiV2",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://auth.chengyi.stage.furthersoftware.com.tw/",
+    "redirectUri": "https://admin.chengyi.stage.furthersoftware.com.tw",
+    "clientId": "ChengyiV2_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone ChengyiV2"
+  },
+  "apis": {
+    "default": {
+      "url": "https://api.chengyi.stage.furthersoftware.com.tw",
+      "rootNamespace": "ChengyiV2"
+    },
+    "AbpAccountPublic": {
+      "url": "https://auth.chengyi.stage.furthersoftware.com.tw",
+      "rootNamespace": "AbpAccountPublic"
+    }
+  }
+}
