@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   chengyiv2-angular:
-    image: mycompanyname/chengyiv2-angular:latest
+    image: further.azurecr.io/chengyiv2-angular:latest
     container_name: chengyiv2-angular
     # build:
     #   context: ../../../
@@ -17,7 +17,7 @@ services:
       - abp-network
 
   chengyiv2-api:
-    image: mycompanyname/chengyiv2-api:latest
+    image: further.azurecr.io/chengyiv2-api:latest
     container_name: chengyiv2-api
     hostname: chengyiv2-api
     # build:
@@ -50,7 +50,7 @@ services:
       - abp-network
   
   chengyiv2-authserver:
-    image: mycompanyname/chengyiv2-authserver:latest
+    image: further.azurecr.io/chengyiv2-authserver:latest
     container_name: chengyiv2-authserver
     # build:
     #   context: ../../
@@ -79,7 +79,7 @@ services:
       - abp-network
 
   db-migrator:
-    image: mycompanyname/chengyiv2-db-migrator:latest
+    image: further.azurecr.io/chengyiv2-db-migrator:latest
     container_name: db-migrator
     # build:
     #   context: ../../
